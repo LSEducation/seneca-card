@@ -35,23 +35,6 @@ module.exports = function( options ) {
   }, cmd_children)
 
 
-
-/*
-  seneca.add({
-    role: plugin,
-    cmd: 'move',
-
-  }, cmd_move)
-
-  seneca.add({
-    role: plugin,
-    cmd: 'order',
-
-  }, cmd_order)
-*/
-
-
-
   seneca.add({
     role: plugin,
     cmd: 'relate'
@@ -93,22 +76,6 @@ module.exports = function( options ) {
 
 
 
-  var cardent = seneca.make('card/card')
-
-
-  seneca.act({
-    role: 'util',
-    cmd:  'ensure_entity',
-
-    pin:{role:'card',cmd:'*'},
-
-    entmap:{
-      card:cardent
-    }
-  })
-
-
-
   function make_top(args, done){
     var seneca = this
 
@@ -132,9 +99,14 @@ module.exports = function( options ) {
 
     var cardent = seneca.make('card/card')
 
-    cardent.load$(args.card.id, function (err, card) {
+    if(!args.card || typeof args.card !== 'string') {
+      setImmediate(_.partial(done, seneca.fail('invalid-card-id', {id: args.card})));
+      return;
+    }
+
+    cardent.load$(args.card, function (err, card) {
       if (err) return done(err);
-      if (!card) return done(seneca.fail('card-not-found', {id: args.card.id}));
+      if (!card) return done(seneca.fail('card-not-found', {id: args.card}));
 
       cardent.list$({parent: card.id}, function (err, children) {
         if (err) return done(err);
@@ -410,7 +382,7 @@ module.exports = function( options ) {
 
     function remove_children(ent, cb) {
       if( 'card' !== args.name ) {
-        seneca.act('role:card,cmd:children', {card: ent}, function (err, children) {
+        seneca.act('role:card,cmd:children', {card: ent.id}, function (err, children) {
           if (err) { return cb(err) }
 
           async.eachLimit(children.children, options.removeLimit, function (child, done) {
