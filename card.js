@@ -154,7 +154,7 @@ module.exports = function( options ) {
 
         if (!card) {
           cardent.make$({
-            id$: content.id,
+            id: content.id,
             title: content.title,
             name: cardname,
             top: parent ? parent.top : content.id,
